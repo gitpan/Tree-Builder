@@ -9,12 +9,11 @@ Tree::Builder - Takes path like strings and builds a tree of hashes of hashes.
 
 =head1 VERSION
 
-Version 0.0.0
+Version 0.1.0
 
 =cut
 
-our $VERSION = '0.0.0';
-
+our $VERSION = '0.1.0';
 
 =head1 SYNOPSIS
 
@@ -26,11 +25,11 @@ our $VERSION = '0.0.0';
     $tb->add('some/thing');
     $tb->add('a/some/thing');
 
-    my %tree=$add
+    my %tree=$tb->getTree;
 
     print $tb->getSeperator;
 
-    $tb->setSeperator('.');
+    $tb->setSeperator('\.');
 
     $tb->add('what.ever');
 
@@ -45,12 +44,23 @@ our $VERSION = '0.0.0';
 
 This initializes the object.
 
-=head3 args hash
+=head3 args hash ref
 
 =head4 seperator
 
-This is the seperator to use for breaking a string down and hadding it
-to the tree.
+This is the seperator, regexp, to use for breaking a string down
+and hadding it to the tree.
+
+If not specified, the default is '\/'.
+
+Be warned, this is a regular expression, so if you don't want it to
+act as such, you will want to use quotemeta.
+
+    #initiates it with the defaults
+    my $tb=Tree::Builder->new;
+
+    #initiaties it with a seperator of .
+    my $tb=Tree::Builder->new({seperator=>'\.'});
 
 =cut
 
@@ -98,10 +108,9 @@ sub add{
 	$self->errorblank;
 
 	if (!defined($item)) {
-		my $error="Item is not defined";
 		$self->{error}=2;
-		$self->{errorString}=$error;
-		warn('Tree-Builer add:2: '.$error);
+		$self->{errorString}="Item is not defined";
+		warn('Tree-Builer add:'.$self->error.': '.$self->errorString);
 		return undef;
 	}
 
@@ -188,7 +197,7 @@ sub getTree{
 
 As long as this is defined, there is no need to check if it errored or not.
 
-    $tb->setSeperator('/');
+    $tb->setSeperator('\/');
     if($tb->{error}){
         print "Error!\n";
     }
@@ -202,16 +211,48 @@ sub setSeperator{
 	$self->errorblank;
 
 	if (!defined($seperator)) {
-		my $error='No seperator specified';
 		$self->{error}=1;
-		$self->{errorString}=$error;
-		warn('Tree-Builder setSeperator:1: '.$error);
+		$self->{errorString}='No seperator specified';
+		warn('Tree-Builder setSeperator:'.$self->error.': '.$self->errorString);
 		return undef;
 	}
 
 	$self->{seperator}=$seperator;
 
 	return 1;
+}
+
+=head1 ERROR RELATED METHODS
+
+=head2 error
+
+Returns the current error code and true if there is an error.
+
+If there is no error, undef is returned.
+
+    if($tb->error){
+        warn('error: '.$foo->error.":".$foo->errorString);
+    }
+
+=cut
+
+sub error{
+    return $_[0]->{error};
+}
+
+=head2 errorString
+
+Returns the error string if there is one. If there is not,
+it will return ''.
+
+    if($tb->error){
+        warn('error: '.$foo->error.":".$foo->errorString);
+    }
+
+=cut
+
+sub errorString{
+    return $_[0]->{errorString};
 }
 
 =head2 errorblank
@@ -227,17 +268,20 @@ sub errorblank{
 
 =head1 ERROR CODES
 
+As all error codes are positive, $tb->error can be checked to see if it
+is true and if it is, then there is an error.
+
 =head2 1
 
 No seperator specified.
 
 =head2 2
 
-Item not defined.
+Item to add not defined.
 
 =head1 AUTHOR
 
-Zane C. Bowers, C<< <vvelox at vvelox.net> >>
+Zane C. Bowers-Hadley, C<< <vvelox at vvelox.net> >>
 
 =head1 BUGS
 
@@ -280,10 +324,11 @@ L<http://search.cpan.org/dist/Tree-Builder/>
 
 =head1 ACKNOWLEDGEMENTS
 
+Emanuele, #69928, for pointing out the crappy docs for 0.0.0
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2009 Zane C. Bowers, all rights reserved.
+Copyright 2011 Zane C. Bowers-Hadley, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
